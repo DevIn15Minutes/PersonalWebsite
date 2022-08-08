@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Find a fun activity here!</title>
+    <link rel="stylesheet" href="styles/index.css" />
+</head>
+
+<body>
+    <div class="topnav">
+        <a href="index.html">Home</a>
+        <a href="activity-finder.html" class="active">Bored? Find an activity!</a>
+    </div>
+    <h1>Find a fun activity here!</h1>
+    <form onsubmit="getActivity();return false;">
+        <select id="type">
+            <option selected disabled value="">Activity type</option>
+            <option value="education">Education</option>
+            <option value="recreational">Recreational</option>
+            <option value="social">Social</option>
+            <option value="diy">DIY</option>
+            <option value="charity">Charity</option>
+            <option value="cooking">Cooking</option>
+            <option value="relaxation">Relaxation</option>
+            <option value="music">Music</option>
+        </select>
+        <input type="number" id="participants" name="participants" placeholder="Number of participants" />
+        <input type="text" id="min_price" name="min_price" placeholder="Minimum price" />
+        <input type="text" id="max_price" name="max_price" placeholder="Maximum price" />
+        <button type="submit" id="find-activity-button">Find an activity!</button>
+    </form>
+    <div class="activity">
+        <div id="activity_name"></div>
+        <div id="activity_type"></div>
+        <div id="activity_participants"></div>
+        <div id="activity_price"></div>
+        <div id="activity_error"></div>
+    </div>
+    <script type="text/javascript">
+        function isNumberGreaterThanZero(number) {
+            const floatNumber = parseFloat(number);
+            return !isNaN(floatNumber) && floatNumber > 0;
+        }
+
+        function formIsValid() {
+            const participants = document.getElementById("participants").value.trim();
+            const min_price = document.getElementById("min_price").value.trim();
+            const max_price = document.getElementById("max_price").value.trim();
+
+            if (participants && participants < 1 || participants > 8) {
+                alert("If entering a number of participants, it needs to be between 1 and 8!");
+                return false;
+            }
+            if (min_price && !isNumberGreaterThanZero(min_price)) {
+                alert("You need a valid number greater than zero for the minimum price!");
+                return false;
+            }
+            if (max_price && !isNumberGreaterThanZero(max_price)) {
+                alert("You need a valid number greater than zero for the maximum price!");
+                return false;
+            }
+            if(isNumberGreaterThanZero(min_price) && isNumberGreaterThanZero(max_price)){
+                if(parseFloat(min_price) > parseFloat(max_price)){
+                    alert("The minimum price needs to be less than or equal to the maximum price!");
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function getActivity() {
+            document.getElementById("activity_name").innerHTML = "";
+            document.getElementById("activity_type").innerHTML = "";
+            document.getElementById("activity_participants").innerHTML = "";
+            document.getElementById("activity_price").innerHTML = "";
+            document.getElementById("activity_error").innerHTML = "";
+
+            if(!formIsValid()) return;
+
+            const type = document.getElementById("type").value;
+            const participants = document.getElementById("participants").value.trim();
+            const min_price = document.getElementById("min_price").value.trim();
+            const max_price = document.getElementById("max_price").value.trim();
+
+            let url = "http://www.boredapi.com/api/activity?";
+
+            if (type !== "") {
+                url += `type=${type}&`;
+            }
+            if (participants !== "") {
+                url += `participants=${participants}&`;
+            }
+            if (min_price !== "") {
+                url += `minprice=${min_price}&`;
+            }
+            if (max_price !== "") {
+                url += `maxprice=${max_price}&`;
+            }
+
+            fetch(url)
+                .then(response => {
+                    return response.text();
+                })
+                .then(text => {
+                    console.log(text);
+                    const response = JSON.parse(text);
+                    if(response["activity"] && response["type"] && response["participants"] && response["price"] >= 0) {
+                        document.getElementById("activity_name").innerHTML = "Activity: " + response["activity"];
+                        document.getElementById("activity_type").innerHTML = "Type: " + response["type"];
+                        document.getElementById("activity_participants").innerHTML = "Number of participants: " + response["participants"];
+                        document.getElementById("activity_price").innerHTML = "Price: " + response["price"];
+                    } else {
+                        document.getElementById("activity_error").innerHTML = "We were unable to find an activity matching the criteria provided.";
+                    }
+                });
+        }
+    </script>
+</body>
+
+</html>
